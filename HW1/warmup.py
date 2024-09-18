@@ -13,7 +13,8 @@ def indices_of_k(arr, k):
 	an array of all of the indices where the value equals k.
 	Hint: You may need to index into the output of np.argwhere.
 	"""
-    raise NotImplementedError
+    return np.where(arr == k)
+    # raise NotImplementedError
 
 
 def argmax_1d(arr):
@@ -27,7 +28,8 @@ def argmax_1d(arr):
 	the largest value in the array. If there are duplicate largest values, return the
 	first index encountered
 	"""
-    raise NotImplementedError
+    return np.argmax(arr)
+    # raise NotImplementedError
 
 
 def mean_rows(arr):
@@ -40,7 +42,8 @@ def mean_rows(arr):
 	Given a two dimensional array, use np.mean and the axis parameter to calculate
 	the mean of each row.
 	"""
-    raise NotImplementedError
+    return np.mean(arr, axis=1)
+    # raise NotImplementedError
 
 
 def sum_squares(arr):
@@ -64,7 +67,10 @@ def sum_squares(arr):
 	 [12],
 	 [27]]
 	"""
-    raise NotImplementedError
+    square_arr = np.square(arr)
+    return np.sum(square_arr, axis=1, keepdims=True)
+
+    # raise NotImplementedError
 
 
 def fast_manhattan(x, y):
@@ -76,7 +82,8 @@ def fast_manhattan(x, y):
 	    dist: N x M numpy array, where dist[i, j] is the Manhattan distance between
 	    x[i, :] and y[j, :]
 	"""
-    raise NotImplementedError
+    return np.abs(x[:, np.newaxis, :] - y[np.newaxis, :, :]).sum(axis=2)
+    # raise NotImplementedError
 
 
 def multiple_choice():
@@ -88,4 +95,5 @@ def multiple_choice():
 	    - return 2 if: `fast_manhattan` has higher space complexity and lower time complexity.
 	    - return 3 if: Both are about the same in space and time complexity.
 	"""
-    raise NotImplementedError
+    return 2
+    # raise NotImplementedError
