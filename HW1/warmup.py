@@ -13,7 +13,7 @@ def indices_of_k(arr, k):
 	an array of all of the indices where the value equals k.
 	Hint: You may need to index into the output of np.argwhere.
 	"""
-    return np.where(arr == k)
+    return np.argwhere(arr == k).flatten()
     # raise NotImplementedError
 
 
@@ -95,5 +95,5 @@ def multiple_choice():
 	    - return 2 if: `fast_manhattan` has higher space complexity and lower time complexity.
 	    - return 3 if: Both are about the same in space and time complexity.
 	"""
-    return 2
+    return 1
     # raise NotImplementedError
