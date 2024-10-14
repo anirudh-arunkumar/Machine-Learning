@@ -164,22 +164,43 @@ class GMM(object):
 		"""
         raise NotImplementedError
 
-    def __call__(self, full_matrix=FULL_MATRIX, abs_tol=1e-16, rel_tol=
-        1e-16, **kwargs):
-        """		
-		Args:
-		    abs_tol: convergence criteria w.r.t absolute change of loss
-		    rel_tol: convergence criteria w.r.t relative change of loss
-		    kwargs: any additional arguments you want
-		
-		Return:
-		    tau: NxK array, the posterior distribution (a.k.a, the soft cluster assignment) for each observation.
-		    (pi, mu, sigma): (1xK np array, KxD numpy array, KxDxD numpy array)
-		
-		Hint:
-		    You do not need to change it. For each iteration, we process E and M steps, then update the paramters.
-		"""
-        raise NotImplementedError
+    def __call__(
+        self, full_matrix=FULL_MATRIX, abs_tol=1e-16, rel_tol=1e-16, **kwargs
+    ):  # No need to change
+        """
+        Args:
+            abs_tol: convergence criteria w.r.t absolute change of loss
+            rel_tol: convergence criteria w.r.t relative change of loss
+            kwargs: any additional arguments you want
+
+        Return:
+            tau: NxK array, the posterior distribution (a.k.a, the soft cluster assignment) for each observation.
+            (pi, mu, sigma): (1xK np array, KxD numpy array, KxDxD numpy array)
+
+        Hint:
+            You do not need to change it. For each iteration, we process E and M steps, then update the paramters.
+        """
+        pi, mu, sigma = self._init_components(**kwargs)
+        pbar = tqdm(range(self.max_iters))
+
+        prev_loss = None
+        for it in pbar:
+            # E-step
+            tau = self._E_step(pi, mu, sigma, full_matrix)
+
+            # M-step
+            pi, mu, sigma = self._M_step(tau, full_matrix)
+
+            # calculate the negative log-likelihood of observation
+            joint_ll = self._ll_joint(pi, mu, sigma, full_matrix)
+            loss = -np.sum(self.logsumexp(joint_ll))
+            if it:
+                diff = np.abs(prev_loss - loss)
+                if diff < abs_tol and diff / prev_loss < rel_tol:
+                    break
+            prev_loss = loss
+            pbar.set_description("iter %d, loss: %.4f" % (it, loss))
+        return tau, (pi, mu, sigma)
 
 
 def cluster_pixels_gmm(image, K, max_iters=10, full_matrix=True):
