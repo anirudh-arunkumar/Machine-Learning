@@ -130,7 +130,11 @@ def pairwise_dist(x, y):
 	
 	HINT: Do not use loops for the pairwise_distance function
 	"""
-    raise NotImplementedError
+    #raise NotImplementedError
+    squaredX = np.atleast_2d((np.sum(np.square(x), axis=1))).T
+    squaredY = np.sum(np.square(y), axis=1)
+    XY = np.dot(x, np.atleast_2d(y).T)
+    return np.sqrt(squaredX - (2 * XY)+ squaredY)
 
 
 def fowlkes_mallow(xGroundTruth, xPredicted):
