@@ -39,7 +39,12 @@ class KMeans(object):
 		    self.centers : K x D numpy array, the centers.
 		Hint: Please initialize centers by randomly sampling points from the dataset in case the autograder fails.
 		"""
-        raise NotImplementedError
+        # raise NotImplementedError
+        random = np.unique(self.points, axis=0)
+        shuffled = np.random.permutation(random.shape[0])
+        index = min(random.shape[0], self.K)
+        centers = random[shuffled[:index]]
+        return centers
 
     def kmpp_init(self):
         """		
@@ -69,7 +74,8 @@ class KMeans(object):
 		Hint: You could call pairwise_dist() function
 		Hint: In case the np.sqrt() function is giving an error in the pairwise_dist() function, you can use the squared distances directly for comparison.
 		"""
-        raise NotImplementedError
+        self.assignments = np.transpose(np.argmin(pairwise_dist(self.points, self.centers), axis=1))
+        return self.assignments
 
     def update_centers(self):
         """		
