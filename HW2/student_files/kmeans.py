@@ -63,7 +63,16 @@ class KMeans(object):
 		Hint:
 		    You could use functions like np.vstack() here.
 		"""
-        raise NotImplementedError
+        sample_size = int(0.01 * self.points.shape[0])
+        random_idx = np.random.choice(self.points.shape[0], sample_size, replace=False)
+        point = self.points[random_idx]
+        center = [point[np.random.choice(sample_size)]]
+        for k in range(1, self.K):
+            difference = point[:, np.newaxis] - center
+            dist = np.min(np.sum(difference**2, axis=2), axis=1)
+            next_idx = np.argmax(dist)
+            center.append(point[next_idx])
+        return np.array(center)
 
     def update_assignment(self):
         """		
@@ -74,7 +83,8 @@ class KMeans(object):
 		Hint: You could call pairwise_dist() function
 		Hint: In case the np.sqrt() function is giving an error in the pairwise_dist() function, you can use the squared distances directly for comparison.
 		"""
-        self.assignments = np.transpose(np.argmin(pairwise_dist(self.points, self.centers), axis=1))
+        assignment = np.argmin(pairwise_dist(self.points, self.centers), axis=1)
+        self.assignments = np.transpose(assignment)
         return self.assignments
 
     def update_centers(self):
@@ -86,7 +96,14 @@ class KMeans(object):
 		HINT: Points may be integer, but the centers should not have to be. Watch out for dtype casting!
 		HINT: If there is an empty cluster then it won't have a cluster center, in that case the number of rows in self.centers can be less than K.
 		"""
-        raise NotImplementedError
+        updated_centers = np.copy(self.centers)
+        for i in range(self.centers.shape[0]):
+            assigned_idx = np.where(self.assignments == i)[0]
+            if len(assigned_idx) > 0:
+                updated_centers[i]= np.mean(self.points[assigned_idx], axis=0)
+        self.centers = updated_centers
+        return updated_centers
+        # raise NotImplementedError
 
     def get_loss(self):
         """		
@@ -94,7 +111,11 @@ class KMeans(object):
 		Return:
 		    self.loss: a single float number, which is the objective function of KMeans.
 		"""
-        raise NotImplementedError
+        diff = self.points - self.centers[self.assignments]
+        dist_squared = np.sum(diff**2, axis=1)
+        self.loss = np.sum(dist_squared)
+        return self.loss
+        # raise NotImplementedError
 
     def train(self):
         """		
@@ -122,7 +143,21 @@ class KMeans(object):
 		HINT: Donot loop over all the points in every iteration. This may result in time out errors
 		HINT: Make sure to care of empty clusters. If there is an empty cluster the number of rows in self.centers can be less than K.
 		"""
-        raise NotImplementedError
+        prev = float('inf')
+        for i in range(self.max_iters):
+            self.update_assignment()
+            lost_cluster = np.setdiff1d(np.arange(self.K), np.unique(self.assignments))
+            randon_points = np.random.choice(self.points.shape[0], size=len(lost_cluster), replace=False)
+            self.centers[lost_cluster] = self.points[randon_points]
+            self.assignments[randon_points] = lost_cluster
+            self.update_centers()
+            curr = self.get_loss()
+            if i > 0 and np.abs(prev - curr) < self.rel_tol * prev:
+                break
+            prev = curr
+        return self.centers, self.assignments, self.loss
+
+        # raise NotImplementedError
 
 
 def pairwise_dist(x, y):
@@ -137,10 +172,13 @@ def pairwise_dist(x, y):
 	HINT: Do not use loops for the pairwise_distance function
 	"""
     #raise NotImplementedError
-    squaredX = np.atleast_2d((np.sum(np.square(x), axis=1))).T
+    np.random.seed(1)
+    squaredX = (np.atleast_2d((np.sum(np.square(x), axis=1)))).T
     squaredY = np.sum(np.square(y), axis=1)
     XY = np.dot(x, np.atleast_2d(y).T)
-    return np.sqrt(squaredX - (2 * XY)+ squaredY)
+    ab = np.absolute(squaredX - (2 * XY) + squaredY)
+    dist = np.sqrt(ab)
+    return dist
 
 
 def fowlkes_mallow(xGroundTruth, xPredicted):
@@ -158,4 +196,21 @@ def fowlkes_mallow(xGroundTruth, xPredicted):
 	    3. Based on the analysis, we can figure out whether it's a TP/FP/FN/FP.
 	    4. Then calculate fowlkes-mallow value
 	"""
-    raise NotImplementedError
+    # raise NotImplementedError
+    TP = 0
+    FP = 0
+    TN = 0
+    FN = 0
+    for i in range(len(xGroundTruth)):
+         for j in range(i + 1, len(xGroundTruth)):
+            ground_cluster = (xGroundTruth[i] == xGroundTruth[j])
+            predicted_cluster = (xPredicted[i] == xPredicted[j])
+            if (ground_cluster and predicted_cluster):
+                    TP += 1
+            elif (not ground_cluster and predicted_cluster):
+                    FP += 1
+            elif (ground_cluster and not predicted_cluster):
+                    FN += 1
+            else:
+                    TN += 1
+    return float(TP)/float(((TP + FN)*(TP + FP)) ** 0.5)
