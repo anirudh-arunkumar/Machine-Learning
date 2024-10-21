@@ -20,8 +20,9 @@ def complete_(data):
 	Return:
 	    labeled_complete: n x (D+1) array (n <= N) where values contain both complete features and labels
 	"""
-    raise NotImplementedError
-
+    # raise NotImplementedError
+    labeled_complete = data[np.logical_not(np.isnan(data).any(axis=1))]
+    return labeled_complete
 
 def incomplete_(data):
     """	
@@ -30,7 +31,9 @@ def incomplete_(data):
 	Return:
 	    labeled_incomplete: n x (D+1) array (n <= N) where values contain incomplete features but complete labels
 	"""
-    raise NotImplementedError
+    # raise NotImplementedError
+    labeled_incomplete = data[np.isnan(data[:,:-1]).any(axis=1) & np.logical_not(np.isnan(data[:, -1]))]
+    return labeled_incomplete
 
 
 def unlabeled_(data):
@@ -40,7 +43,9 @@ def unlabeled_(data):
 	Return:
 	    unlabeled_complete: n x (D+1) array (n <= N) where values contain complete features but incomplete labels
 	"""
-    raise NotImplementedError
+    unlabeled_complete = data[np.isnan(data[:,-1])]
+    return unlabeled_complete
+    # raise NotImplementedError
 
 
 class CleanData(object):

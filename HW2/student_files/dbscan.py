@@ -22,8 +22,23 @@ class DBSCAN(object):
 		If a point is unvisited or is a noise point (has fewer than the minimum number of neighbor points), then its cluster assignment should be -1.
 		Set the first cluster as C = 0
 		"""
-        raise NotImplementedError
-
+        # raise NotImplementedError
+        C = 0
+        visited = set()
+        length = len(self.dataset)
+        index = np.full(self.dataset.shape[0], -1)
+        for n in range(length):
+            if n in visited:
+                continue
+            visited.add(n)
+            neighbor_points = self.regionQuery(n)
+            if self.minPts > len(neighbor_points):
+                index[n] = -1
+            else:
+                self.expandCluster(n, neighbor_points, C, index, visited)
+                C += 1
+        return index
+    
     def expandCluster(self, index, neighborIndices, C, cluster_idx,
         visitedIndices):
         """		
@@ -42,6 +57,8 @@ class DBSCAN(object):
 		    2. Use, np.unique(), np.take() to ensure that you don't re-explore the same Indices. This way we avoid redundancy.
 		"""
         raise NotImplementedError
+            
+    
 
     def regionQuery(self, pointIndex):
         """		
@@ -53,4 +70,7 @@ class DBSCAN(object):
 		    indices: (I, ) int numpy array containing the indices of all points within P's eps-neighborhood
 		Hint: pairwise_dist (implemented above) and np.argwhere may be helpful here
 		"""
-        raise NotImplementedError
+        # raise NotImplementedError
+        distance = pairwise_dist(self.dataset[pointIndex].reshape(1, -1), self.dataset).flatten()
+        indices = np.argwhere(distance <= self.eps).flatten()
+        return indices
