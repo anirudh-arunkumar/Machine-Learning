@@ -33,7 +33,13 @@ class PCA(object):
 		    self.S: (min(N,D), ) numpy array
 		    self.V: (min(N,D), D) numpy array
 		"""
-        raise NotImplementedError
+        # raise NotImplementedError
+        adj = X - np.mean(X, axis=0)
+        U, S, V = np.linalg.svd(adj)
+        U = U[:, :min(X.shape[1], X.shape[0])]
+        self.U = U
+        self.S = S
+        self.V = V
 
     def transform(self, data: np.ndarray, K: int=2) ->np.ndarray:
         """		
@@ -49,7 +55,12 @@ class PCA(object):
 		
 		Hint: Make sure you remember to first center your data by subtracting the mean of each feature.
 		"""
-        raise NotImplementedError
+        # raise NotImplementedError
+        u = self.U[:, :K]
+        s = self.S[:K]
+        v = self.V[:K, :].T
+        US = u * s
+        return US
 
     def transform_rv(self, data: np.ndarray, retained_variance: float=0.99
         ) ->np.ndarray:
@@ -68,13 +79,21 @@ class PCA(object):
 		
 		Hint: Make sure you remember to first center your data by subtracting the mean of each feature.
 		"""
-        raise NotImplementedError
+        # raise NotImplementedError
+        adj = data - np.mean(data, axis=0)
+        cumulative = np.cumsum(self.S**2)
+        sm = np.sum(self.S**2)
+        var = cumulative / sm
+        k = np.argmax(var >= retained_variance) + 1
+        X_new = np.dot(adj, self.V[:k, :].T)
+        return X_new
 
     def get_V(self) ->np.ndarray:
         """		
 		Getter function for value of V
 		"""
-        raise NotImplementedError
+        # raise NotImplementedError
+        return self.V
 
     def visualize(self, X: np.ndarray, y: np.ndarray, fig_title) ->None:
         """		
@@ -91,4 +110,17 @@ class PCA(object):
 		
 		Return: None
 		"""
-        raise NotImplementedError
+        pca = PCA()
+        reduced_2d = pca.transform(data=pca.fit(X), K=2)
+        data = {'Feature 1':reduced_2d[:, 0], 'Feature 2':reduced_2d[:, 1], 'label':y}
+        df_2d = pd.DataFrame(data)
+        fig_2d = px.scatter(df_2d, color='label', x='Feature 1', y='Feature 2', title=fig_title)
+        pca_3d = PCA()
+        reduced_3d = pca_3d.transform(data=pca_3d.fit(X), K=3)
+        data = {'Feature 1':reduced_3d[:, 0], 'Feature 2':reduced_3d[:, 1], 'Feature 3':reduced_3d[:, 2], 'label':y}
+        df_3d = pd.DataFrame(data)
+        fig_3d = px.scatter_3d(df_3d, color='label', x='Feature 1', y='Feature 2', z='Feature 3', title=fig_title)
+        fig_2d.show()
+        fig_3d.show()
+        # raise NotImplementedError
+        

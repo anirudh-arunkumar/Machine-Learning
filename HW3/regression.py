@@ -17,7 +17,9 @@ class Regression(object):
 		Return:
 		    A float value
 		"""
-        raise NotImplementedError
+        # raise NotImplementedError
+        val = np.sqrt(np.mean((pred - label) ** 2))
+        return val
 
     def construct_polynomial_feats(self, x: np.ndarray, degree: int
         ) ->np.ndarray:
@@ -63,7 +65,16 @@ class Regression(object):
 		        [ x_{3,1}^2  x_{3,2}^2]
 		        [ x_{3,1}^3  x_{3,2}^3]]]
 		"""
-        raise NotImplementedError
+        if x.ndim == 1:
+            x = x[:, np.newaxis]
+        N, D = x.shape
+        feat = np.ones((N, degree + 1, D))
+        for idx in range(1, degree + 1):
+            feat[:, idx, :] = x ** idx
+        if len(x.shape) == 1:
+            feat = feat.reshape(N, -1)
+        return feat
+        # raise NotImplementedError
 
     def predict(self, xtest: np.ndarray, weight: np.ndarray) ->np.ndarray:
         """		
@@ -77,8 +88,9 @@ class Regression(object):
 		Return:
 		    prediction: (N,1) numpy array, the predicted labels
 		"""
-        raise NotImplementedError
-
+        prediction = np.matmul(xtest, weight)
+        return prediction
+        # raise NotImplementedError
     def linear_fit_closed(self, xtrain: np.ndarray, ytrain: np.ndarray
         ) ->np.ndarray:
         """		
@@ -94,7 +106,8 @@ class Regression(object):
 		Hints:
 		    - For pseudo inverse, you should use the numpy linear algebra function (np.linalg.pinv)
 		"""
-        raise NotImplementedError
+        # raise NotImplementedError
+        return np.matmul(np.linalg.pinv(xtrain), ytrain)
 
     def linear_fit_GD(self, xtrain: np.ndarray, ytrain: np.ndarray, epochs:
         int=5, learning_rate: float=0.001) ->Tuple[np.ndarray, List[float]]:
@@ -114,7 +127,17 @@ class Regression(object):
 		Hints:
 		    - RMSE loss should be recorded AFTER the gradient update in each iteration.
 		"""
-        raise NotImplementedError
+        # raise NotImplementedError
+        weight = np.zeros((xtrain.shape[1], 1))
+        prediction = self.predict(xtrain, weight)
+        loss = []
+        for _ in range(epochs):
+            grad = np.matmul(xtrain.T, prediction - ytrain) / xtrain.shape[0]
+            weight -= learning_rate * grad
+            prediction = self.predict(xtrain, weight)
+            rmse = self.rmse(prediction, ytrain)
+            loss.append(rmse)
+        return weight, loss
 
     def linear_fit_SGD(self, xtrain: np.ndarray, ytrain: np.ndarray, epochs:
         int=100, learning_rate: float=0.001) ->Tuple[np.ndarray, List[float]]:
@@ -141,7 +164,22 @@ class Regression(object):
 		
 		NOTE: For autograder purposes, iterate through the dataset SEQUENTIALLY, NOT stochastically.
 		"""
-        raise NotImplementedError
+        loss = []
+        weight = np.zeros((xtrain.shape[1], 1))
+        for _ in range(epochs):
+            for n in range(xtrain.shape[0]):
+                Iy = ytrain[n]
+                Ix = xtrain[n].reshape(-1, xtrain.shape[1])
+                prediction = self.predict(Ix, weight)
+                diff = Iy - prediction
+                gradient = np.matmul(-Ix.T, diff)
+                weight -= learning_rate * gradient
+                mult_xtrain = np.matmul(xtrain, weight)
+                rmse = self.rmse(mult_xtrain, ytrain)
+                loss.append(rmse)
+        return weight, loss
+                
+        # raise NotImplementedError
 
     def ridge_fit_closed(self, xtrain: np.ndarray, ytrain: np.ndarray,
         c_lambda: float) ->np.ndarray:
@@ -159,7 +197,13 @@ class Regression(object):
 		Hints:
 		    - You should adjust your I matrix to handle the bias term differently than the rest of the terms
 		"""
-        raise NotImplementedError
+        D = xtrain.shape[1]
+        I = np.eye(D)
+        I[0, 0] = 0
+        val = xtrain.T @ xtrain + c_lambda * I
+        weight = np.linalg.pinv(val) @ xtrain.T @ ytrain
+        return weight
+        # raise NotImplementedError
 
     def ridge_fit_GD(self, xtrain: np.ndarray, ytrain: np.ndarray, c_lambda:
         float, epochs: int=500, learning_rate: float=1e-07) ->Tuple[np.
@@ -184,7 +228,20 @@ class Regression(object):
 		    - RMSE loss should be recorded AFTER the gradient update in each iteration.
 		    - You should avoid applying regularization to the bias term in the gradient update
 		"""
-        raise NotImplementedError
+        loss = np.zeros((epochs))
+        weight = np.zeros((xtrain.shape[1], 1))
+        for _ in range(epochs):
+            prediction = self.predict(xtrain, weight)
+            weighted = c_lambda * weight
+            zero_index = xtrain.shape[0]
+            val = weighted / zero_index
+            val[0] = 0
+            gradient = 1 /xtrain.shape[0] * np.matmul(-xtrain.T, ytrain - prediction) + val
+            weight -= learning_rate * gradient
+            prediction = self.predict(xtrain, weight)
+            loss[_] = self.rmse(prediction, ytrain)
+        return weight, loss
+        # raise NotImplementedError
 
     def ridge_fit_SGD(self, xtrain: np.ndarray, ytrain: np.ndarray,
         c_lambda: float, epochs: int=100, learning_rate: float=0.001) ->Tuple[
@@ -214,7 +271,24 @@ class Regression(object):
 		
 		NOTE: For autograder purposes, iterate through the dataset SEQUENTIALLY, NOT stochastically.
 		"""
-        raise NotImplementedError
+        loss = []
+        weight = np.zeros((xtrain.shape[1], 1))
+        for epocj in range(epochs):
+            for n in range(xtrain.shape[0]):
+                Iy = ytrain[n]
+                Ix = xtrain[n].reshape(-1, xtrain.shape[1])
+                prediction = self.predict(Ix, weight)
+                weighted = c_lambda * weight
+                eror = prediction - Iy
+                zero_idx = xtrain.shape[0]
+                val = weighted / zero_idx
+                val[0] = 0
+                grad = np.dot(Ix.T, eror) + val
+                weight -= learning_rate * grad
+                rmse_loss = self.rmse(np.dot(xtrain, weight), ytrain)
+                loss.append(rmse_loss)
+        return weight, loss
+        # raise NotImplementedError
 
     def ridge_cross_validation(self, X: np.ndarray, y: np.ndarray, kfold:
         int=5, c_lambda: float=100) ->List[float]:
@@ -238,7 +312,20 @@ class Regression(object):
 		        split X and y into 5 equal-size folds
 		        use 80 percent for training and 20 percent for test
 		"""
-        raise NotImplementedError
+        length = len(X) // kfold
+        loss = []
+        for i in range(kfold):
+            beginning, end = i * length, (i + 1) * length
+            feat = np.concatenate((X[:beginning], X[end:]), axis=0)
+            target = np.concatenate((y[:beginning], y[end:]), axis=0)
+            temp_f = X[beginning:end]
+            temp_t = y[beginning:end]
+            weight = self.ridge_fit_closed(feat, target, c_lambda)
+            prediction = self.predict(temp_f, weight)
+            rmse_loss = self.rmse(prediction, temp_t)
+            loss.append(rmse_loss)
+        return loss
+        # raise NotImplementedError
 
     def hyperparameter_search(self, X: np.ndarray, y: np.ndarray,
         lambda_list: List[float], kfold: int) ->Tuple[float, float, List[float]
