@@ -58,7 +58,13 @@ class SVDRecommender(object):
 		    U_k: (Nxk) numpy array containing k features for each user
 		    V_k: (kXM) numpy array containing k features for each movie
 		"""
-        raise NotImplementedError
+        # raise NotImplementedError
+        compression = ImgCompression()
+        U, S, V = compression.svd(R)
+        U_k, S_k, V_k = compression.compress(U, S, V, k)
+        U_k = np.dot(U_k, np.diag(S_k))
+        V_k = np.dot(np.diag(S_k), V_k)
+        return U_k, V_k
 
     def predict(self, R: np.ndarray, U_k: np.ndarray, V_k: np.ndarray,
         users_index: dict, movies_index: dict, user_id: int, movies_pool:
@@ -88,7 +94,19 @@ class SVDRecommender(object):
 		    3. Utilize dictionaries `users_index` and `movies_index` to map between userId, movieId to their
 		        corresponding indices in R (or U_k, V_k)
 		"""
-        raise NotImplementedError
+        # raise NotImplementedError
+        recommendation = []
+        user_idx = users_index[user_id]
+        user_rating = R[user_idx, :]
+        for movie_name in movies_pool:
+            movie_id = self.get_movie_id_by_name(movie_name)
+            movie_idx = movies_index.get(movie_id)
+            if movie_idx is None or not np.isnan(user_rating[movie_idx]):
+                continue
+            pred = np.dot(U_k[user_idx, :], V_k[:, movie_idx])
+            recommendation.append((movie_name, pred))
+        recommendation.sort(key=lambda x: x[1], reverse=True)
+        return np.array([movie for movie, _ in recommendation[:top_n]])
 
     def create_ratings_matrix(self, ratings_df: pd.DataFrame) ->Tuple[np.
         ndarray, dict, dict]:

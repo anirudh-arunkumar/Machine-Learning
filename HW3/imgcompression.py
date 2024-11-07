@@ -119,7 +119,6 @@ class ImgCompression(object):
 		"""
         # raise NotImplementedError
         dimension = S.ndim
-        
         if dimension == 1:
             total = np.sum(S**2)
             recovered_var = np.sum(S[:k] ** 2)

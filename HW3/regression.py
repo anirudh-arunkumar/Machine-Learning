@@ -128,7 +128,8 @@ class Regression(object):
 		    - RMSE loss should be recorded AFTER the gradient update in each iteration.
 		"""
         # raise NotImplementedError
-        weight = np.zeros((xtrain.shape[1], 1))
+        D = xtrain.shape[1]
+        weight = np.zeros((D, 1))
         prediction = self.predict(xtrain, weight)
         loss = []
         for _ in range(epochs):
@@ -164,8 +165,9 @@ class Regression(object):
 		
 		NOTE: For autograder purposes, iterate through the dataset SEQUENTIALLY, NOT stochastically.
 		"""
+        D = xtrain.shape[1]
         loss = []
-        weight = np.zeros((xtrain.shape[1], 1))
+        weight = np.zeros((D, 1))
         for _ in range(epochs):
             for n in range(xtrain.shape[0]):
                 Iy = ytrain[n]
@@ -272,7 +274,8 @@ class Regression(object):
 		NOTE: For autograder purposes, iterate through the dataset SEQUENTIALLY, NOT stochastically.
 		"""
         loss = []
-        weight = np.zeros((xtrain.shape[1], 1))
+        D = xtrain.shape[1]
+        weight = np.zeros((D, 1))
         for epocj in range(epochs):
             for n in range(xtrain.shape[0]):
                 Iy = ytrain[n]

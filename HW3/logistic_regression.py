@@ -23,7 +23,8 @@ class LogisticRegression(object):
 		"""
         # raise NotImplementedError
         den = 1 + np.exp(-s)
-        return 1 / den
+        arr = 1 / den
+        return arr
 
     def bias_augment(self, x: np.ndarray) ->np.ndarray:
         """		
@@ -55,7 +56,8 @@ class LogisticRegression(object):
 		"""
         # raise NotImplementedError
         prod = np.dot(x_aug, theta)
-        return self.sigmoid(prod)
+        h_x = self.sigmoid(prod)
+        return h_x
 
     def predict_labels(self, h_x: np.ndarray, thresold: float) ->np.ndarray:
         """		

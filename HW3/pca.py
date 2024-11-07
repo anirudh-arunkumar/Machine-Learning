@@ -85,7 +85,8 @@ class PCA(object):
         sm = np.sum(self.S**2)
         var = cumulative / sm
         k = np.argmax(var >= retained_variance) + 1
-        X_new = np.dot(adj, self.V[:k, :].T)
+        v = self.V[:k, :].T
+        X_new = np.dot(adj, v)
         return X_new
 
     def get_V(self) ->np.ndarray:
@@ -110,17 +111,41 @@ class PCA(object):
 		
 		Return: None
 		"""
-        pca = PCA()
-        reduced_2d = pca.transform(data=pca.fit(X), K=2)
-        data = {'Feature 1':reduced_2d[:, 0], 'Feature 2':reduced_2d[:, 1], 'label':y}
-        df_2d = pd.DataFrame(data)
-        fig_2d = px.scatter(df_2d, color='label', x='Feature 1', y='Feature 2', title=fig_title)
-        pca_3d = PCA()
-        reduced_3d = pca_3d.transform(data=pca_3d.fit(X), K=3)
-        data = {'Feature 1':reduced_3d[:, 0], 'Feature 2':reduced_3d[:, 1], 'Feature 3':reduced_3d[:, 2], 'label':y}
-        df_3d = pd.DataFrame(data)
-        fig_3d = px.scatter_3d(df_3d, color='label', x='Feature 1', y='Feature 2', z='Feature 3', title=fig_title)
-        fig_2d.show()
-        fig_3d.show()
+        second_pca = PCA()
+        third_pca = PCA()
+        second_reduce = second_pca.transform(data=second_pca.fit(X), K=2)
+        third_reduce = third_pca.transform(data=third_pca.fit(X), K=3)
+        
+        second_data_body = {
+            'Feature 1':second_reduce[:, 0], 
+            'Feature 2':second_reduce[:, 1], 
+            'label':y
+        }
+        second_dataframe = pd.DataFrame(second_data_body)
+        second_figure = px.scatter(
+            second_dataframe, 
+            color='label', 
+            x='Feature 1', 
+            y='Feature 2', 
+            title=fig_title
+        )
+        second_figure.show()
+
+        third_data_body = {
+            'Feature 1':third_reduce[:, 0], 
+            'Feature 2':third_reduce[:, 1], 
+            'Feature 3':third_reduce[:, 2], 
+            'label':y
+        }
+        third_dataframe = pd.DataFrame(third_data_body)
+        third_figure = px.scatter_3d(
+            third_dataframe, 
+            color='label', 
+            x='Feature 1', 
+            y='Feature 2', 
+            z='Feature 3', 
+            title=fig_title
+        )
+        third_figure.show()
         # raise NotImplementedError
         
