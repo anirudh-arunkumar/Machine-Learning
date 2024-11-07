@@ -38,7 +38,28 @@ class FeatureReduction(object):
 		    - You can access the feature names using data.columns.tolist().
 		    - You can index into a Pandas dataframe using multiple column names at once in a list.
 		"""
-        raise NotImplementedError
+        # raise NotImplementedError
+        remaining_feat = list(data.columns)
+        selected_features = []
+        while remaining_feat:
+            lowest_val = float("inf")
+            best = None
+            for feat in remaining_feat:
+                test_feat = selected_features + [feat]
+                pred = data[test_feat]
+                intercept = sm.add_constant(pred)
+                model = sm.OLS(target, intercept).fit()
+                p_val = model.pvalues[feat]
+                if lowest_val > p_val:
+                    lowest_val = p_val
+                    best = feat
+            if significance_level > lowest_val:
+                remaining_feat.remove(best)
+                selected_features.append(best)
+            else:
+                break
+        return selected_features
+        
 
     @staticmethod
     def backward_elimination(data: pd.DataFrame, target: pd.Series,
@@ -63,7 +84,20 @@ class FeatureReduction(object):
 		    - You can access the feature names using data.columns.tolist().
 		    - You can index into a Pandas dataframe using multiple column names at once in a list.
 		"""
-        raise NotImplementedError
+        # raise NotImplementedError
+        selected_feat = list(data.columns)
+        while selected_feat:
+            pred = data[selected_feat]
+            intercept = sm.add_constant(pred)
+            model = sm.OLS(target, intercept).fit()
+            p_val = model.pvalues.drop("const")
+            p_val_max = p_val.max()
+            if significance_level < p_val_max:
+                removal = p_val.idxmax()
+                selected_feat.remove(removal)
+            else:
+                break
+        return selected_feat
 
     def evaluate_features(data: pd.DataFrame, y: pd.Series, features: list
         ) ->None:
