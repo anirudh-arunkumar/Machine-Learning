@@ -117,7 +117,9 @@ class NeuralNet:
         Returns:
            o (np.ndarray): output, same shape as input u.
         """
-        raise NotImplementedError()
+        # raise NotImplementedError()
+        o = u * (1 / (1 + np.exp(-u)))
+        return o
 
     def derivative_silu(self, x):
         """
@@ -129,7 +131,10 @@ class NeuralNet:
         Returns:
                 np.ndarray: Derivative of SiLU.
         """
-        raise NotImplementedError()
+        # raise NotImplementedError()
+        sigmoid = 1 / (1 + np.exp(-x))
+        sigmoid = sigmoid * (1 + x * (1- sigmoid))
+        return sigmoid
 
     def softmax(self, u):
         """
@@ -140,7 +145,9 @@ class NeuralNet:
         Output:
                 o (np.ndarray: (N, D)): N probability distributions over D classes
         """
-        raise NotImplementedError()
+        # raise NotImplementedError()
+        exp_u = np.exp(u - np.max(u, axis=1, keepdims=True))
+        return exp_u / np.sum(exp_u, axis=1, keepdims=True)
 
     def cross_entropy_loss(self, y, y_hat):
         """
@@ -153,7 +160,10 @@ class NeuralNet:
         Returns:
                 loss (float): average cross entropy loss
         """
-        raise NotImplementedError()
+        # raise NotImplementedError()
+        n = y.shape[0]
+        loss = -np.sum(y* np.log(y_hat + 1e-15)) / n
+        return loss
 
     @staticmethod
     def _dropout(u, prob):
